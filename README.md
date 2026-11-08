@@ -68,9 +68,13 @@ This deploys a test USDC (`MockUSDC`) and the factory. Set `USDC_ADDRESS` to use
 - **Curfew hours are set in UTC.** The app converts to your local time.
 - **Guardians must be people you trust to respond.** A guardian can cause inconvenience, by freezing or rescuing to your own recovery address, but can't steal.
 
+## Web app
+
+`web/` holds the Next.js app: the no-wallet **2:07 AM demo**, vault creation with a Base Account passkey, an owner and guardian dashboard, and a public page showing the most anyone can take right now. See [web/README.md](web/README.md).
+
 ## Roadmap
 
-- Web app with passkey wallet, guardian alerts with one-tap cancel, a public "most anyone can take tonight" page, and a no-wallet "2:07 AM" demo.
+- Guardian alerts by Telegram with one-tap cancel.
 - Founder vaults for teams receiving Vibestarter tranches.
 - An agent wallet mode: an AI agent spends small amounts instantly and anything large waits for your morning approval.
 

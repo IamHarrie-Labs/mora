@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "abi": "hardhat compile && node scripts/export-abi.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
