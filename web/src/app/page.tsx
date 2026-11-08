@@ -75,7 +75,7 @@ export default function Home() {
         <p className="text-muted max-w-3xl">
           Your vault is a standalone contract that holds the funds itself, so there’s no side door around the delay. Money leaves only
           three ways: within the instant allowance, after the delay, or by rescue to your own recovery address. It has no
-          arbitrary calls, no approvals, no upgrades. 32 tests cover stolen keys, coercion, malicious guardians, and attempts to split
+          arbitrary calls, no approvals, no upgrades. 35 tests cover stolen keys, coercion, malicious guardians, and attempts to split
           transfers or time them around the allowance.
         </p>
         <p className="text-sm text-muted">

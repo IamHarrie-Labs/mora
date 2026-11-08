@@ -198,7 +198,7 @@ function Emergency({ vault, recovery, refetch, pending }: { vault: Address; reco
           Freeze
         </button>
       </div>
-      <p className="text-xs text-muted">Rescue can only send to the recovery address. A freeze pauses every unlock and can’t be lifted early.</p>
+      <p className="text-xs text-muted">Rescue can only send to the recovery address, and it voids everything still queued. A freeze pauses every unlock and can’t be lifted early.</p>
       <TxStatus hash={tx.hash} busy={tx.busy} error={tx.error} />
     </Panel>
   );

@@ -14,6 +14,9 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 ///         upgrades, no native ETH. The only ways tokens leave are `withdraw` (instant, capped),
 ///         `execute` (after the delay), and `rescue` (only to `recovery`).
 ///         Loosening any control is itself queued behind the delay; tightening is instant.
+///         A rescue voids everything still queued, so a thief holding the owner key cannot leave a
+///         recovery, owner or rule change ticking behind it. Voiding is O(1) via `epoch`, so flooding
+///         the queue can never make `rescue` too expensive to call.
 contract MoraVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -46,6 +49,7 @@ contract MoraVault is ReentrancyGuard {
         uint128 amount;
         uint64 unlockAt;
         Status status;
+        uint64 epoch; // rescue epoch when queued; void once `epoch` moves on
     }
 
     enum ChangeKind {
@@ -59,6 +63,7 @@ contract MoraVault is ReentrancyGuard {
         ChangeKind kind;
         uint64 readyAt;
         Status status;
+        uint64 epoch; // rescue epoch when queued; void once `epoch` moves on
         bytes data;
     }
 
@@ -77,6 +82,8 @@ contract MoraVault is ReentrancyGuard {
     uint128 public used;
     uint64 public usedAt;
     uint64 public frozenUntil;
+    /// @notice Bumped by every rescue. Queue entries from an earlier epoch can never execute or apply.
+    uint64 public epoch;
 
     Withdrawal[] internal _withdrawals;
     Change[] internal _changes;
@@ -100,6 +107,7 @@ contract MoraVault is ReentrancyGuard {
     event OwnerUpdated(address indexed owner);
     event Frozen(address indexed by, uint64 until);
     event Rescued(address indexed by, address indexed token, address indexed to, uint256 amount);
+    event QueueVoided(address indexed by, uint64 epoch);
 
     // ---------------------------------------------------------------- errors
 
@@ -182,7 +190,7 @@ contract MoraVault is ReentrancyGuard {
 
         uint64 unlockAt = _unlockTime(block.timestamp);
         id = _withdrawals.length;
-        _withdrawals.push(Withdrawal({to: to, amount: amount, unlockAt: unlockAt, status: Status.Pending}));
+        _withdrawals.push(Withdrawal({to: to, amount: amount, unlockAt: unlockAt, status: Status.Pending, epoch: epoch}));
         emit WithdrawalQueued(id, to, amount, unlockAt);
         return (true, id);
     }
@@ -190,7 +198,7 @@ contract MoraVault is ReentrancyGuard {
     /// @notice Anyone may execute a queued withdrawal once it has unlocked and the vault is not frozen.
     function execute(uint256 id) external nonReentrant {
         Withdrawal storage w = _withdrawals[id];
-        if (w.status != Status.Pending) revert NotPending();
+        if (w.status != Status.Pending || w.epoch != epoch) revert NotPending();
         if (block.timestamp < w.unlockAt) revert NotReady();
         if (_isFrozen()) revert IsFrozen();
         w.status = Status.Executed;
@@ -200,7 +208,7 @@ contract MoraVault is ReentrancyGuard {
 
     function cancel(uint256 id) external onlyOwnerOrGuardian {
         Withdrawal storage w = _withdrawals[id];
-        if (w.status != Status.Pending) revert NotPending();
+        if (w.status != Status.Pending || w.epoch != epoch) revert NotPending();
         w.status = Status.Cancelled;
         emit WithdrawalCancelled(id, msg.sender);
     }
@@ -216,12 +224,15 @@ contract MoraVault is ReentrancyGuard {
         emit Frozen(msg.sender, frozenUntil);
     }
 
-    /// @notice Send the vault's entire balance of `asset` to the pre-committed recovery address.
-    ///         Owner or any guardian. Funds can never go anywhere else through this path.
+    /// @notice Send the vault's entire balance of `asset` to the pre-committed recovery address,
+    ///         and void every queued withdrawal and change. Owner or any guardian.
+    ///         Funds can never go anywhere else through this path.
     /// @dev    Accepts any ERC-20 so stray tokens sent here can also be recovered.
     function rescue(IERC20 asset) external onlyOwnerOrGuardian nonReentrant {
         uint256 bal = asset.balanceOf(address(this));
         if (bal == 0) revert NothingToRescue();
+        ++epoch;
+        emit QueueVoided(msg.sender, epoch);
         emit Rescued(msg.sender, address(asset), recovery, bal);
         asset.safeTransfer(recovery, bal);
     }
@@ -269,7 +280,7 @@ contract MoraVault is ReentrancyGuard {
     /// @notice Anyone may apply a change once its delay has passed and the vault is not frozen.
     function applyChange(uint256 id) external {
         Change storage c = _changes[id];
-        if (c.status != Status.Pending) revert NotPending();
+        if (c.status != Status.Pending || c.epoch != epoch) revert NotPending();
         if (block.timestamp < c.readyAt) revert NotReady();
         if (_isFrozen()) revert IsFrozen();
         c.status = Status.Executed;
@@ -295,7 +306,7 @@ contract MoraVault is ReentrancyGuard {
 
     function cancelChange(uint256 id) external onlyOwnerOrGuardian {
         Change storage c = _changes[id];
-        if (c.status != Status.Pending) revert NotPending();
+        if (c.status != Status.Pending || c.epoch != epoch) revert NotPending();
         c.status = Status.Cancelled;
         emit ChangeCancelled(id, msg.sender);
     }
@@ -332,16 +343,20 @@ contract MoraVault is ReentrancyGuard {
         return _withdrawals.length;
     }
 
-    function getWithdrawal(uint256 id) external view returns (Withdrawal memory) {
-        return _withdrawals[id];
+    /// @dev An entry voided by a rescue is reported as Cancelled.
+    function getWithdrawal(uint256 id) external view returns (Withdrawal memory w) {
+        w = _withdrawals[id];
+        if (w.status == Status.Pending && w.epoch != epoch) w.status = Status.Cancelled;
     }
 
     function changeCount() external view returns (uint256) {
         return _changes.length;
     }
 
-    function getChange(uint256 id) external view returns (Change memory) {
-        return _changes[id];
+    /// @dev An entry voided by a rescue is reported as Cancelled.
+    function getChange(uint256 id) external view returns (Change memory c) {
+        c = _changes[id];
+        if (c.status == Status.Pending && c.epoch != epoch) c.status = Status.Cancelled;
     }
 
     // ---------------------------------------------------------------- internal
@@ -374,7 +389,7 @@ contract MoraVault is ReentrancyGuard {
     function _queueChange(ChangeKind kind, bytes memory data) internal returns (uint256 id) {
         uint64 readyAt = uint64(block.timestamp) + rules.delay;
         id = _changes.length;
-        _changes.push(Change({kind: kind, readyAt: readyAt, status: Status.Pending, data: data}));
+        _changes.push(Change({kind: kind, readyAt: readyAt, status: Status.Pending, epoch: epoch, data: data}));
         emit ChangeQueued(id, kind, data, readyAt);
     }
 

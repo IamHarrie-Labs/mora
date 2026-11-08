@@ -23,14 +23,14 @@ Built for **Vibestarter Vibeathon 02** (theme: *Night shift*).
 | **Curfew hours** | During your night (e.g. 22:00–07:00) the instant allowance is **$0**. |
 | **Everything else waits** | Larger withdrawals are queued for the full delay (e.g. 12h), even when requested at 06:59. A wait that would end inside curfew is pushed to the end of curfew. |
 | **Guardians** | Up to 5 people you trust. They can **cancel** a queued withdrawal, **freeze** the vault (up to 3 days, freezes only extend), or **rescue**. They can never withdraw. |
-| **Rescue** | Sends the entire balance to a **recovery address you committed in advance**, and nowhere else. |
+| **Rescue** | Sends the entire balance to a **recovery address you committed in advance**, and nowhere else. It also **voids everything still queued**, so a thief can't leave a recovery-address or owner change ticking behind it. |
 | **Loosening waits too** | Raising limits, removing a guardian, or changing the recovery address or owner is queued behind the same delay and can be cancelled. Tightening is instant. |
 | **"Sign on the door"** | `maxExtractableNow()` shows publicly the most anyone can take right now, usually **$0** at night. |
 
 ### What happens in an attack
 | Scenario | Outcome |
 |---|---|
-| Key stolen, used at 2:07 AM | Every transfer is queued. A guardian presses Rescue and funds go to your recovery wallet. **Thief gets $0.** |
+| Key stolen, used at 2:07 AM | Every transfer is queued. A guardian presses Rescue: funds go to your recovery wallet and the thief's queued transfers and rule changes are voided. **Thief gets $0.** |
 | Key stolen, used in daytime | At most the remaining instant allowance leaves. Everything else is cancelled or rescued. |
 | Forced at home to send everything and loosen the rules | The transfer and the rule changes are all queued, and a guardian cancels them. |
 | A guardian turns malicious | They can delay or rescue to *your* recovery address, but never take funds. |
@@ -49,7 +49,7 @@ npm install
 npx hardhat test
 ```
 
-All 32 tests cover setup, the allowance (including split and burst bypass attempts), curfew across midnight, minimum delays, cancel, freeze, rescue, delayed rule changes, and the full attack scenarios above.
+All 35 tests cover setup, the allowance (including split and burst bypass attempts), curfew across midnight, minimum delays, cancel, freeze, rescue (including voiding the queue), delayed rule changes, and the full attack scenarios above.
 
 The project compiles with the npm-bundled `solc` 0.8.28 (solc-js), so no compiler download is needed.
 
