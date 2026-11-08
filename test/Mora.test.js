@@ -277,6 +277,55 @@ describe("Mora", function () {
       await expect(vault.execute(0)).to.be.reverted;
       expect(await usdc.balanceOf(payee.address)).to.equal(0n);
     });
+
+    it("voids every queued withdrawal and change, and the views report them cancelled", async function () {
+      const { vault, owner, g1, g2, attacker, recovery, usdc } = await loadFixture(deploy);
+      await vault.connect(owner).withdraw(attacker.address, USDC(5_000));
+      await vault.connect(owner).proposeRecovery(attacker.address);
+      await vault.connect(owner).proposeOwner(attacker.address);
+      await vault.connect(owner).proposeRemoveGuardian(g1.address);
+      await vault.connect(owner).proposeRules({ dailyLimit: USDC(10_000), delay: H, curfewStart: 0, curfewEnd: 0 });
+
+      await expect(vault.connect(g2).rescue(await usdc.getAddress())).to.emit(vault, "QueueVoided").withArgs(g2.address, 1n);
+      expect(await vault.epoch()).to.equal(1n);
+
+      await time.increase(3 * DAY);
+      await expect(vault.execute(0)).to.be.revertedWithCustomError(vault, "NotPending");
+      for (let i = 0; i < 4; i++) await expect(vault.applyChange(i)).to.be.revertedWithCustomError(vault, "NotPending");
+      await expect(vault.connect(g1).cancel(0)).to.be.revertedWithCustomError(vault, "NotPending");
+      await expect(vault.connect(g1).cancelChange(0)).to.be.revertedWithCustomError(vault, "NotPending");
+
+      const CANCELLED = 3n;
+      expect((await vault.getWithdrawal(0)).status).to.equal(CANCELLED);
+      for (let i = 0; i < 4; i++) expect((await vault.getChange(i)).status).to.equal(CANCELLED);
+      expect(await vault.recovery()).to.equal(recovery.address);
+      expect(await vault.owner()).to.equal(owner.address);
+      expect(await vault.isGuardian(g1.address)).to.equal(true);
+      expect((await vault.rules()).dailyLimit).to.equal(USDC(200));
+    });
+
+    it("requests made after a rescue are live again, and still delayed and cancellable", async function () {
+      const { vault, owner, g1, payee, usdc } = await loadFixture(deploy);
+      await vault.connect(g1).rescue(await usdc.getAddress());
+      await usdc.mint(await vault.getAddress(), USDC(1_000));
+      await vault.connect(owner).withdraw(payee.address, USDC(900)); // id 0
+      await vault.connect(owner).withdraw(payee.address, USDC(50)); // instant, within allowance
+      await vault.connect(owner).withdraw(payee.address, USDC(500)); // id 1
+      await vault.connect(g1).cancel(1);
+      const unlockAt = Number((await vault.getWithdrawal(0)).unlockAt);
+      await expect(vault.execute(0)).to.be.revertedWithCustomError(vault, "NotReady");
+      await time.increaseTo(unlockAt);
+      await vault.execute(0);
+      expect(await usdc.balanceOf(payee.address)).to.equal(USDC(950));
+      await expect(vault.execute(1)).to.be.revertedWithCustomError(vault, "NotPending");
+    });
+
+    it("cannot be priced out: rescue costs the same however long the queue is", async function () {
+      const { vault, owner, g1, attacker, usdc } = await loadFixture(deploy);
+      for (let i = 0; i < 60; i++) await vault.connect(owner).proposeRecovery(attacker.address);
+      const tx = await vault.connect(g1).rescue(await usdc.getAddress());
+      expect((await tx.wait()).gasUsed).to.be.lessThan(120_000n);
+    });
   });
 
   describe("rule changes", function () {
@@ -355,6 +404,12 @@ describe("Mora", function () {
       await time.increase(3 * DAY);
       await expect(vault.execute(0)).to.be.reverted;
       expect(await usdc.balanceOf(attacker.address)).to.equal(0n);
+
+      // The thief's queued rule changes died with the rescue: the recovery address is still yours.
+      await expect(vault.applyChange(0)).to.be.revertedWithCustomError(vault, "NotPending");
+      await expect(vault.applyChange(1)).to.be.revertedWithCustomError(vault, "NotPending");
+      expect(await vault.recovery()).to.equal(recovery.address);
+      expect((await vault.rules()).dailyLimit).to.equal(USDC(200));
     });
 
     it("STOLEN KEY in daytime: the loss is capped at the daily allowance", async function () {

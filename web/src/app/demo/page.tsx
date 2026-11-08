@@ -195,7 +195,7 @@ export default function DemoPage() {
               Rescue everything → your cold wallet
             </button>
             <button className="btn btn-ghost" onClick={() => setV(S.freeze(v, 3 * S.DAY))}>Freeze 3 days</button>
-            <p className="text-xs text-muted">Guardians can cancel, freeze or rescue. They can never withdraw, and rescue only goes to your recovery address.</p>
+            <p className="text-xs text-muted">Guardians can cancel, freeze or rescue. They can never withdraw. Rescue only goes to your recovery address and voids everything queued.</p>
           </div>
         </Phone>
       </div>

@@ -125,6 +125,7 @@ export function freeze(prev: Vault, secs: number): Vault {
   return v;
 }
 
+/** Like MoraVault.rescue: moves everything to the recovery address and voids the whole queue (the contract bumps `epoch`). */
 export function rescue(prev: Vault): Vault {
   if (prev.balance === 0) return prev;
   const v = clone(prev);
@@ -133,6 +134,14 @@ export function rescue(prev: Vault): Vault {
   v.balance = 0;
   v.rescued += amt;
   log(v, "guardian", `Rescued $${amt.toLocaleString()} to ${v.recovery}. It can go nowhere else.`, "good");
+  let voided = 0;
+  for (const x of [...v.withdrawals, ...v.changes]) {
+    if (x.status === "pending") {
+      x.status = "cancelled";
+      voided++;
+    }
+  }
+  if (voided) log(v, "vault", `Rescue also voided ${voided === 1 ? "the queued request" : `all ${voided} queued requests`}. None of them can ever go through.`, "good");
   return v;
 }
 
