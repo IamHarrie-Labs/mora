@@ -1,27 +1,35 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ConnectButton } from "./ConnectButton";
+import { Lockup } from "./Logo";
 
 export function Header() {
-  return (
-    <header className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-      <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
-        <Moon /> Mora
-      </Link>
-      <nav className="flex items-center gap-2 sm:gap-4 text-sm">
-        <Link href="/demo" className="text-muted hover:text-ink">Demo</Link>
-        <Link href="/app" className="text-muted hover:text-ink">My vaults</Link>
-        <ConnectButton />
-      </nav>
-    </header>
-  );
-}
+  const path = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const on = () => setScrolled(window.scrollY > 8);
+    on();
+    window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  const current = (p: string) => (path === p ? "page" : undefined);
 
-export function Moon({ size = 22 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
-      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" fill="var(--moon)" />
-    </svg>
+    <header className="site-header" data-scrolled={scrolled}>
+      <div className="inner">
+        <Link href="/" aria-label="Mora home">
+          <Lockup size={40} />
+        </Link>
+        <nav className="site-nav" aria-label="Main">
+          <Link className="navlink hide-sm" href="/#how">How it works</Link>
+          <Link className="navlink" href="/demo" aria-current={current("/demo")}>Demo</Link>
+          <Link className="navlink hide-sm" href="/app" aria-current={current("/app")}>Your vaults</Link>
+          <ConnectButton />
+        </nav>
+      </div>
+    </header>
   );
 }

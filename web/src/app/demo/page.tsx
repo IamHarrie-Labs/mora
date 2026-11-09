@@ -69,171 +69,131 @@ export default function DemoPage() {
         : "Skip ahead to see what happens once the delays run out.";
 
   return (
-    <div className="py-6 space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {(Object.keys(SCENARIOS) as Scenario[]).map((k) => (
-          <button key={k} onClick={() => reset(k)} className={`btn ${k === scenario ? "btn-moon" : "btn-ghost"}`}>
-            {SCENARIOS[k].tab}
-          </button>
-        ))}
-        <button onClick={() => reset()} className="btn btn-ghost ml-auto">Restart</button>
-      </div>
-
-      <section className="space-y-2">
-        <h1 className="text-2xl sm:text-3xl font-bold">{sc.title}</h1>
-        <p className="text-muted max-w-3xl">{sc.intro}</p>
-        <p className="text-xs text-muted">
-          Simulation that follows the same rules as the MoraVault contract (tested in{" "}
-          <a className="underline" href="https://github.com/IamHarrie-Labs/mora/blob/main/test/Mora.test.js">test/Mora.test.js</a>). No wallet needed.{" "}
-          <a className="underline" href="#live-proof">See it on-chain ↓</a>
-        </p>
+    <div className="wrap">
+      <section className="page-head grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-end">
+        <div>
+          <span className="eyebrow">Demo · no wallet needed</span>
+          <h1 className="page-title mt-5">{sc.title}</h1>
+          <p className="lede mt-5 max-w-2xl text-muted">{sc.intro}</p>
+        </div>
+        <div className="flex flex-wrap gap-2 lg:justify-end">
+          {(Object.keys(SCENARIOS) as Scenario[]).map((k) => (
+            <button key={k} onClick={() => reset(k)} className={`btn ${k === scenario ? "btn-moon" : "btn-ghost"}`} aria-pressed={k === scenario}>
+              {SCENARIOS[k].tab}
+            </button>
+          ))}
+          <button onClick={() => reset()} className="btn btn-ghost">Restart</button>
+        </div>
       </section>
 
-      <div className="card p-4 sm:p-5 flex flex-wrap items-center gap-x-8 gap-y-3">
-        <div>
-          <div className="text-xs text-muted">Time</div>
-          <div className="text-3xl font-mono font-bold">{S.clock(v.now)}</div>
+      <div className="overflow-hidden rounded-[22px] border-[1.5px] border-black bg-black text-[#fbf7ee]">
+        <div className="grid gap-px bg-[#2a2a2a] sm:grid-cols-2 lg:grid-cols-[1fr_1.4fr_1fr_1fr_1fr]">
+          <Stat label="Time" value={S.clock(v.now)} mono />
+          <Stat label="Most anyone can take now" value={`$${extractable.toLocaleString()}`} big tone={extractable === 0 ? "sun" : "bad"} />
+          <Stat label="In the vault" value={`$${v.balance.toLocaleString()}`} />
+          <Stat label="Attacker got" value={`$${stolen.toLocaleString()}`} tone={stolen ? "bad" : undefined} />
+          <Stat label="Safe in your cold wallet" value={`$${rescued.toLocaleString()}`} tone={rescued ? "sun" : undefined} />
         </div>
-        <div>
-          <div className="text-xs text-muted">Most anyone can take right now</div>
-          <div className={`text-3xl font-bold ${extractable === 0 ? "text-good" : "text-moon"}`}>${extractable.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-xs text-muted">In the vault</div>
-          <div className="text-xl font-semibold">${v.balance.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-xs text-muted">Attacker got</div>
-          <div className={`text-xl font-semibold ${stolen ? "text-bad" : "text-good"}`}>${stolen.toLocaleString()}</div>
-        </div>
-        <div>
-          <div className="text-xs text-muted">Safe in your cold wallet</div>
-          <div className="text-xl font-semibold text-good">${rescued.toLocaleString()}</div>
-        </div>
-        <div className="text-sm text-muted basis-full">
-          Rules: ${v.rules.dailyLimit} instant per day · nothing instant 22:00–07:00 · everything else waits 12h · 1 guardian · recovery = your cold wallet
+        <div className="border-t border-[#2a2a2a] px-5 py-3 text-xs text-[#b3b3b3]">
+          Rules: ${v.rules.dailyLimit} instant per day · nothing instant 22:00 to 07:00 · everything else waits 12h · 1 guardian · recovery is your cold wallet
         </div>
       </div>
 
-      <div className="rounded-xl border border-moon/40 bg-moon/10 px-4 py-3 text-sm">
-        <span className="font-semibold text-moon">Next: </span>
-        {hint}
+      <div className="mt-4 flex items-start gap-3 rounded-[16px] border-[1.5px] border-black bg-sun px-5 py-4 text-[15px]" role="status">
+        <span className="font-bold">Next</span>
+        <span>{hint}</span>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Attacker */}
+      <div className="mt-6 grid gap-5 lg:grid-cols-3">
         <Phone title={sc.attacker} sub={sc.attackerSub} tone="bad">
           <ActionButton onClick={() => setV(S.withdraw(v, THIEF, v.balance || 10_000))}>Send everything to {THIEF}</ActionButton>
-          <ActionButton onClick={() => setV(S.withdraw(v, THIEF, 200))}>Just send $200 (the daily allowance)</ActionButton>
+          <ActionButton onClick={() => setV(S.withdraw(v, THIEF, 200))}>Send $200, the daily allowance</ActionButton>
           {scenario === "leak" ? (
-            <ActionButton
-              onClick={() =>
-                setV(S.proposeChange(v, "recovery", `change the recovery address to ${THIEF}`, (s) => void (s.recovery = THIEF)))
-              }
-            >
+            <ActionButton onClick={() => setV(S.proposeChange(v, "recovery", `change the recovery address to ${THIEF}`, (s) => void (s.recovery = THIEF)))}>
               Change the recovery address to mine
             </ActionButton>
           ) : (
             <ActionButton
               onClick={() =>
-                setV(
-                  S.proposeChange(v, "rules", "raise the limit to $10,000 and turn off curfew", (s) =>
-                    void (s.rules = { dailyLimit: 10_000, delay: S.HOUR, curfewStart: 0, curfewEnd: 0 })
-                  )
-                )
+                setV(S.proposeChange(v, "rules", "raise the limit to $10,000 and turn off curfew", (s) => void (s.rules = { dailyLimit: 10_000, delay: S.HOUR, curfewStart: 0, curfewEnd: 0 })))
               }
             >
               Turn off the limits
             </ActionButton>
           )}
-          <ActionButton
-            onClick={() => setV(S.proposeChange(v, "removeGuardian", "remove your guardian", () => undefined))}
-          >
-            Remove the guardian
-          </ActionButton>
+          <ActionButton onClick={() => setV(S.proposeChange(v, "removeGuardian", "remove your guardian", () => undefined))}>Remove the guardian</ActionButton>
         </Phone>
 
-        {/* Vault */}
-        <div className="card p-4 space-y-3">
-          <div className="font-semibold">Vault queue</div>
-          {v.withdrawals.length === 0 && v.changes.length === 0 && <p className="text-sm text-muted">Nothing waiting.</p>}
-          {v.withdrawals.map((w) => (
-            <QueueRow key={`w${w.id}`} status={w.status} title={`Send $${w.amount.toLocaleString()} → ${w.to}`} sub={`unlocks ${S.clock(w.unlockAt)}`} />
-          ))}
-          {v.changes.map((c) => (
-            <QueueRow key={`c${c.id}`} status={c.status} title={`Rule change: ${c.label}`} sub={`applies ${S.clock(c.readyAt)}`} />
-          ))}
-          <div className="pt-2 border-t border-line flex flex-wrap gap-2">
-            {v.now < morning && (
-              <button className="btn btn-ghost" onClick={() => setV(S.advanceTo(v, morning))}>Skip to morning (07:00)</button>
-            )}
-            {nextUnlock && (
-              <button className="btn btn-ghost" onClick={() => setV(S.advanceTo(v, nextUnlock))}>
-                Skip to {S.clock(nextUnlock)} (first unlock)
-              </button>
-            )}
+        <div className="rounded-[22px] border-[1.5px] border-black bg-surface-2 p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="panel-title">Vault queue</h2>
+            <span className="pill">{pendingCount} waiting</span>
+          </div>
+          <div className="mt-4 space-y-2">
+            {v.withdrawals.length === 0 && v.changes.length === 0 && <p className="text-sm text-muted">Nothing waiting.</p>}
+            {v.withdrawals.map((w) => (
+              <QueueRow key={`w${w.id}`} status={w.status} title={`Send $${w.amount.toLocaleString()} to ${w.to}`} sub={`unlocks ${S.clock(w.unlockAt)}`} />
+            ))}
+            {v.changes.map((c) => (
+              <QueueRow key={`c${c.id}`} status={c.status} title={`Rule change: ${c.label}`} sub={`applies ${S.clock(c.readyAt)}`} />
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2 border-t border-line pt-4">
+            {v.now < morning && <button className="btn btn-ghost" onClick={() => setV(S.advanceTo(v, morning))}>Skip to 07:00</button>}
+            {nextUnlock && <button className="btn btn-ghost" onClick={() => setV(S.advanceTo(v, nextUnlock))}>Skip to {S.clock(nextUnlock)}, the first unlock</button>}
           </div>
         </div>
 
-        {/* Guardian */}
-        <Phone title="Ada, your sister" sub="guardian" tone="good" buzzKey={buzz}>
-          {pendingCount === 0 && <p className="text-sm text-muted">No alerts. Phone is quiet.</p>}
-          {v.withdrawals
-            .filter((w) => w.status === "pending")
-            .map((w) => (
-              <Alert key={`aw${w.id}`} text={`Mora: $${w.amount.toLocaleString()} to ${w.to} is waiting (unlocks ${S.clock(w.unlockAt)}).`}>
-                <button className="btn btn-good" onClick={() => setV(S.cancel(v, w.id))}>Cancel</button>
-              </Alert>
-            ))}
-          {v.changes
-            .filter((c) => c.status === "pending")
-            .map((c) => (
-              <Alert key={`ac${c.id}`} text={`Mora: someone asked to ${c.label} (applies ${S.clock(c.readyAt)}).`}>
-                <button className="btn btn-good" onClick={() => setV(S.cancelChange(v, c.id))}>Cancel</button>
-              </Alert>
-            ))}
-          <div className="pt-2 border-t border-line grid gap-2">
-            <button className="btn btn-moon" disabled={v.balance === 0} onClick={() => setV(S.rescue(v))}>
-              Rescue everything → your cold wallet
-            </button>
-            <button className="btn btn-ghost" onClick={() => setV(S.freeze(v, 3 * S.DAY))}>Freeze 3 days</button>
-            <p className="text-xs text-muted">Guardians can cancel, freeze or rescue. They can never withdraw. Rescue only goes to your recovery address and voids everything queued.</p>
+        <Phone title="Ada, your sister" sub="your guardian" tone="good" buzzKey={buzz}>
+          {pendingCount === 0 && <p className="text-sm text-muted">No alerts. The phone is quiet.</p>}
+          {v.withdrawals.filter((w) => w.status === "pending").map((w) => (
+            <Alert key={`aw${w.id}`} text={`Mora: $${w.amount.toLocaleString()} to ${w.to} is waiting. It unlocks at ${S.clock(w.unlockAt)}.`}>
+              <button className="btn btn-good" onClick={() => setV(S.cancel(v, w.id))}>Cancel</button>
+            </Alert>
+          ))}
+          {v.changes.filter((c) => c.status === "pending").map((c) => (
+            <Alert key={`ac${c.id}`} text={`Mora: someone asked to ${c.label}. It applies at ${S.clock(c.readyAt)}.`}>
+              <button className="btn btn-good" onClick={() => setV(S.cancelChange(v, c.id))}>Cancel</button>
+            </Alert>
+          ))}
+          <div className="grid gap-2 border-t border-line pt-3">
+            <button className="btn btn-sun" disabled={v.balance === 0} onClick={() => setV(S.rescue(v))}>Rescue everything to your cold wallet</button>
+            <button className="btn btn-ghost" onClick={() => setV(S.freeze(v, 3 * S.DAY))}>Freeze for 3 days</button>
+            <p className="text-xs leading-relaxed text-muted">A guardian can cancel, freeze or rescue. Rescue sends money only to your recovery address, and it voids everything in the queue.</p>
           </div>
         </Phone>
       </div>
 
       {settled && v.now > S.demoVault().now && (
-        <div className={`card p-5 text-center ${stolen ? "border-bad" : "border-good"}`}>
-          <div className="text-2xl font-bold">{stolen ? `The attacker got $${stolen.toLocaleString()}.` : "The attacker got $0."}</div>
-          <p className="text-muted mt-1">
-            {stolen
-              ? "Try again: the guardian has 12 hours to cancel or rescue."
-              : rescued
-                ? `Your $${rescued.toLocaleString()} is in your cold wallet.`
-                : `Your $${v.balance.toLocaleString()} is still in the vault.`}
+        <div className={`mt-6 rounded-[22px] border-[1.5px] border-black p-8 text-center ${stolen ? "bg-white" : "bg-sun"}`}>
+          <div className="page-title">{stolen ? `The attacker got $${stolen.toLocaleString()}.` : "The attacker got $0."}</div>
+          <p className="mt-3 text-muted">
+            {stolen ? "Try again. The guardian has 12 hours to cancel or rescue." : rescued ? `Your $${rescued.toLocaleString()} is in your cold wallet.` : `Your $${v.balance.toLocaleString()} is still in the vault.`}
           </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <button className="btn btn-ghost" onClick={() => reset(scenario === "leak" ? "force" : "leak")}>
-              Try “{SCENARIOS[scenario === "leak" ? "force" : "leak"].tab}”
-            </button>
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            <button className="btn btn-ghost" onClick={() => reset(scenario === "leak" ? "force" : "leak")}>Try “{SCENARIOS[scenario === "leak" ? "force" : "leak"].tab}”</button>
             <Link href="/app" className="btn btn-moon">Make your own vault</Link>
           </div>
         </div>
       )}
 
-      <div className="card p-4">
-        <div className="font-semibold mb-2">What happened</div>
-        <ol className="space-y-1.5 text-sm">
+      <div className="mt-6 rounded-[22px] border border-line bg-white p-6">
+        <h2 className="panel-title">What happened</h2>
+        <ol className="mt-4 space-y-2 text-sm">
           {v.log.map((l, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="font-mono text-muted shrink-0">{S.clock(l.t)}</span>
+            <li key={i} className="flex gap-4">
+              <span className="num shrink-0 text-muted">{S.clock(l.t)}</span>
               <span className={l.tone === "bad" ? "text-bad" : l.tone === "good" ? "text-good" : "text-ink"}>
-                <span className="text-muted">{l.who === "attacker" ? sc.attacker : l.who === "guardian" ? "Guardian" : "Vault"}: </span>
+                <span className="font-semibold">{l.who === "attacker" ? sc.attacker : l.who === "guardian" ? "Guardian" : "Vault"}: </span>
                 {l.text}
               </span>
             </li>
           ))}
         </ol>
+        <p className="mt-6 text-xs text-muted">
+          This simulation follows the same rules as the MoraVault contract. 30 parity tests check it against the real contract step by step.{" "}
+          <a className="underline" href="#live-proof">See the attack on-chain ↓</a>
+        </p>
       </div>
 
       <LiveProof />
@@ -241,30 +201,33 @@ export default function DemoPage() {
   );
 }
 
+function Stat({ label, value, big, mono, tone }: { label: string; value: string; big?: boolean; mono?: boolean; tone?: "sun" | "bad" }) {
+  const color = tone === "sun" ? "text-sun" : tone === "bad" ? "text-[#ff8a73]" : "";
+  return (
+    <div className="bg-black px-5 py-5">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a6a6a6]">{label}</div>
+      <div className={`mt-2 ${mono ? "num text-[34px] font-bold" : big ? "big-num text-[52px]" : "big-num text-[30px]"} ${color}`}>{value}</div>
+    </div>
+  );
+}
+
 function LiveProof() {
   return (
-    <section id="live-proof" className="card p-4 sm:p-5 space-y-3 scroll-mt-6">
-      <div>
-        <div className="text-xs font-semibold uppercase tracking-wide text-moon">Not just a simulation</div>
-        <h2 className="text-lg font-semibold">This attack really ran on Base Sepolia</h2>
-        <p className="text-sm text-muted">The same contract, deployed and attacked for real. Every step is a transaction you can check.</p>
-      </div>
-      <ol className="space-y-2 text-sm">
+    <section id="live-proof" className="mt-6 scroll-mt-24 rounded-[22px] bg-black p-6 text-[#fbf7ee] sm:p-8">
+      <span className="eyebrow text-sun">On-chain proof</span>
+      <h2 className="h-md mt-4">This attack ran on Base Sepolia, with the same contract.</h2>
+      <ol className="mt-6 border-t border-[#333]">
         {PROOF_STEPS.map((s, i) => (
-          <li key={s.tx} className="flex gap-3">
-            <span className="font-mono text-muted shrink-0">{i + 1}.</span>
-            <span className="min-w-0">
-              {s.text}{" "}
-              <a className="underline text-muted whitespace-nowrap" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">
-                view tx ↗
-              </a>
-            </span>
+          <li key={s.tx} className="grid grid-cols-[40px_1fr_auto] items-baseline gap-3 border-b border-[#333] py-3 text-sm">
+            <span className="num text-sun">0{i + 1}</span>
+            <span>{s.text}</span>
+            <a className="num whitespace-nowrap text-xs text-[#a6a6a6] underline underline-offset-4 hover:text-sun" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">tx ↗</a>
           </li>
         ))}
       </ol>
-      <div className="flex flex-wrap gap-2 pt-1">
-        <Link href={`/v/${LIVE.vault}`} className="btn btn-ghost">See that vault live</Link>
-        <a href={basescan("address", LIVE.factory)} target="_blank" rel="noreferrer" className="btn btn-ghost">Factory on Basescan ↗</a>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Link href={`/v/${LIVE.vault}`} className="btn btn-sun">See that vault live</Link>
+        <a href={basescan("address", LIVE.factory)} target="_blank" rel="noreferrer" className="btn border-[#666] text-[#fbf7ee] hover:bg-[#222]">Factory on Basescan ↗</a>
       </div>
     </section>
   );
@@ -272,19 +235,22 @@ function LiveProof() {
 
 function Phone({ title, sub, tone, children, buzzKey }: { title: string; sub: string; tone: "bad" | "good"; children: React.ReactNode; buzzKey?: number }) {
   return (
-    <div key={buzzKey} className={`card p-4 space-y-3 ${buzzKey ? "buzz" : ""} ${tone === "bad" ? "border-bad/50" : "border-good/50"}`}>
-      <div>
-        <div className={`font-semibold ${tone === "bad" ? "text-bad" : "text-good"}`}>{title}</div>
-        <div className="text-xs text-muted">{sub}</div>
+    <div key={buzzKey} className={`rounded-[22px] border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_#111] ${buzzKey ? "buzz" : ""}`}>
+      <div className="flex items-center gap-3">
+        <span className={`grid h-10 w-10 place-items-center rounded-full text-sm font-bold ${tone === "bad" ? "bg-[#ffd9d0] text-bad" : "bg-[#d6f0e2] text-good"}`}>{title[0]}</span>
+        <div>
+          <div className="panel-title leading-tight">{title}</div>
+          <div className="text-xs text-muted">{sub}</div>
+        </div>
       </div>
-      <div className="grid gap-2">{children}</div>
+      <div className="mt-4 grid gap-2">{children}</div>
     </div>
   );
 }
 
 function ActionButton({ children, onClick }: { children: React.ReactNode; onClick: () => void }) {
   return (
-    <button className="btn btn-ghost justify-start text-left" onClick={onClick}>
+    <button className="btn btn-ghost justify-start rounded-[14px] text-left" onClick={onClick}>
       {children}
     </button>
   );
@@ -292,7 +258,7 @@ function ActionButton({ children, onClick }: { children: React.ReactNode; onClic
 
 function Alert({ text, children }: { text: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg bg-surface-2 border border-line p-3 space-y-2">
+    <div className="space-y-2 rounded-[14px] bg-surface-2 p-3">
       <p className="text-sm">{text}</p>
       {children}
     </div>
@@ -300,14 +266,14 @@ function Alert({ text, children }: { text: string; children: React.ReactNode }) 
 }
 
 function QueueRow({ status, title, sub }: { status: S.Status; title: string; sub: string }) {
-  const tag = status === "pending" ? ["waiting", "text-moon"] : status === "cancelled" ? ["stopped", "text-good"] : ["done", "text-bad"];
+  const tag = status === "pending" ? ["waiting", "pill-sun"] : status === "cancelled" ? ["stopped", "text-good border-good"] : ["sent", "text-bad border-bad"];
   return (
-    <div className="flex items-start justify-between gap-3 text-sm">
+    <div className="flex items-start justify-between gap-3 rounded-[14px] bg-white p-3 text-sm">
       <div>
-        <div className={status === "cancelled" ? "line-through text-muted" : ""}>{title}</div>
-        <div className="text-xs text-muted">{sub}</div>
+        <div className={status === "cancelled" ? "text-muted line-through" : "font-medium"}>{title}</div>
+        <div className="num mt-0.5 text-xs text-muted">{sub}</div>
       </div>
-      <span className={`text-xs font-semibold uppercase ${tag[1]}`}>{tag[0]}</span>
+      <span className={`pill shrink-0 ${tag[1]}`}>{tag[0]}</span>
     </div>
   );
 }

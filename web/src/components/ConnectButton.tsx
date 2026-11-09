@@ -17,7 +17,7 @@ export function ConnectButton() {
   }
   if (isConnected) {
     return (
-      <button className="btn btn-ghost font-mono" onClick={() => disconnect()} title="Disconnect">
+      <button className="btn btn-ghost num" onClick={() => disconnect()} title="Disconnect">
         {short(address)}
       </button>
     );
@@ -28,7 +28,7 @@ export function ConnectButton() {
         {isPending ? "Connecting…" : "Connect"}
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-60 card p-2 z-20 shadow-xl">
+        <div className="absolute right-0 z-40 mt-2 w-64 rounded-[18px] border-[1.5px] border-black bg-white p-2 shadow-[5px_5px_0_#111]">
           {connectors.map((c) => (
             <button
               key={c.uid}

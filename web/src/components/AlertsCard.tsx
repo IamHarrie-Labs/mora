@@ -21,24 +21,24 @@ export function AlertsCard({ vault, compact = false }: { vault: string; compact?
 
   if (compact) {
     return (
-      <a href={link} target="_blank" rel="noreferrer" className="btn btn-ghost">
-        Get Telegram alerts for this vault
+      <a href={link} target="_blank" rel="noreferrer" className="btn btn-moon">
+        Get Telegram alerts
       </a>
     );
   }
 
   return (
-    <section className="card p-4 space-y-3">
-      <div className="font-semibold">Guardian alerts</div>
-      <p className="text-sm text-muted">
-        A delay only helps if someone notices. Guardians get a Telegram message within about 5 minutes of any withdrawal
+    <section className="space-y-3 rounded-[22px] border-[1.5px] border-black bg-sun p-6">
+      <h2 className="panel-title">Guardian alerts</h2>
+      <p className="text-sm">
+        A delay helps when someone notices. Guardians get a Telegram message within about 5 minutes of any withdrawal
         request or rule change, with a button back here to cancel or rescue.
       </p>
       <div className="flex flex-wrap gap-2">
         <a href={link} target="_blank" rel="noreferrer" className="btn btn-moon">Get alerts on Telegram</a>
-        <button className="btn btn-ghost" onClick={copy}>{copied ? "Copied" : "Copy link for your guardians"}</button>
+        <button className="btn btn-ghost bg-white" onClick={copy}>{copied ? "Copied" : "Copy link for your guardians"}</button>
       </div>
-      <p className="text-xs text-muted break-all">
+      <p className="text-xs break-all">
         Or message <span className="font-mono">@{ALERT_BOT}</span> with <span className="font-mono">/watch {vault}</span>
       </p>
     </section>

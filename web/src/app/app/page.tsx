@@ -12,6 +12,7 @@ import { useTx } from "@/lib/hooks";
 import { NotDeployed } from "@/components/NotDeployed";
 import { TxStatus } from "@/components/TxStatus";
 import { ConnectButton } from "@/components/ConnectButton";
+import { Mark } from "@/components/Logo";
 
 export default function MyVaults() {
   const { address, isConnected } = useAccount();
@@ -23,32 +24,57 @@ export default function MyVaults() {
     query: { enabled: Boolean(address && FACTORY) },
   });
 
-  if (!isDeployed) return <div className="py-10"><NotDeployed /></div>;
+  if (!isDeployed) return <div className="wrap py-10"><NotDeployed /></div>;
 
   if (!isConnected)
     return (
-      <div className="py-16 max-w-xl space-y-4">
-        <h1 className="text-3xl font-bold">Your vaults</h1>
-        <p className="text-muted">Connect with Base Account (Face ID, no extension) or any browser wallet. Mora runs on Base Sepolia testnet.</p>
-        <ConnectButton />
+      <div className="wrap">
+        <div className="grid items-center gap-12 py-16 lg:grid-cols-[1.2fr_1fr]">
+          <div>
+            <span className="eyebrow">Your vaults</span>
+            <h1 className="page-title mt-5">Connect a wallet to make a vault.</h1>
+            <p className="lede mt-5 max-w-xl text-muted">
+              Base Account signs in with Face ID or a passkey, with no extension to install. Any browser wallet works too. Mora runs on
+              Base Sepolia testnet, so use test money.
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-6">
+              <ConnectButton />
+              <Link href="/demo" className="link-arrow">Try the demo first →</Link>
+            </div>
+          </div>
+          <div className="relative hidden justify-center lg:flex">
+            <div className="halftone absolute h-[320px] w-[320px] text-[#e2d4ad]" />
+            <Mark size={340} className="relative mt-24 text-black" />
+          </div>
+        </div>
       </div>
     );
 
   const list = (vaults.data as readonly Address[] | undefined) ?? [];
 
   return (
-    <div className="py-8 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
+    <div className="wrap">
+      <div className="page-head">
+        <span className="eyebrow">Your vaults</span>
+        <h1 className="page-title mt-5">{list.length ? "Your vaults" : "Make your first vault"}</h1>
+      </div>
+      <div className="grid gap-8 lg:grid-cols-[1fr_1.3fr]">
       <section className="space-y-3">
-        <h1 className="text-3xl font-bold">Your vaults</h1>
-        {list.length === 0 && <p className="text-muted">No vaults yet. Create one on the right.</p>}
+        {list.length === 0 && (
+          <div className="rounded-[22px] bg-sun p-6">
+            <p className="h-md">No vaults yet.</p>
+            <p className="mt-3 text-[15px]">Pick your rules in the form. You can tighten them later at once, and loosening them waits the delay.</p>
+          </div>
+        )}
         {list.map((v) => (
-          <Link key={v} href={`/vault/${v}`} className="card p-4 flex items-center justify-between hover:border-moon">
-            <span className="font-mono">{short(v)}</span>
-            <span className="text-sm text-moon">Open →</span>
+          <Link key={v} href={`/vault/${v}`} className="group flex items-center justify-between rounded-[18px] border-[1.5px] border-black bg-white p-5 transition-shadow hover:shadow-[5px_5px_0_#111]">
+            <span className="flex items-center gap-3"><Mark size={34} /><span className="num">{short(v)}</span></span>
+            <span className="text-sm font-semibold">Open →</span>
           </Link>
         ))}
       </section>
       <CreateVault owner={address!} onCreated={() => vaults.refetch()} />
+      </div>
     </div>
   );
 }
@@ -69,7 +95,7 @@ function CreateVault({ owner, onCreated }: { owner: Address; onCreated: () => vo
   async function submit() {
     setProblem(undefined);
     if (!isAddress(recovery)) return setProblem("Recovery address must be a valid 0x address (a wallet you keep offline).");
-    if (recovery.toLowerCase() === owner.toLowerCase()) return setProblem("Use a different wallet for recovery, ideally a cold wallet, not the one you’re connected with.");
+    if (recovery.toLowerCase() === owner.toLowerCase()) return setProblem("Pick a different wallet for recovery. A cold wallet you keep offline works best.");
     const bad = guardianList.find((g) => !isAddress(g) || g.toLowerCase() === owner.toLowerCase());
     if (bad) return setProblem(`Guardian ${bad} isn’t valid (and can’t be your own address).`);
     if (guardianList.length > 5) return setProblem("Up to 5 guardians.");
@@ -86,8 +112,8 @@ function CreateVault({ owner, onCreated }: { owner: Address; onCreated: () => vo
   }
 
   return (
-    <section className="card p-5 sm:p-6 space-y-4">
-      <h2 className="text-xl font-semibold">Create a vault</h2>
+    <section className="space-y-5 rounded-[22px] border-[1.5px] border-black bg-white p-6 shadow-[8px_8px_0_#111] sm:p-8">
+      <h2 className="h-md">Create a vault</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Instant allowance per day (USDC)">
           <input className="input" inputMode="decimal" value={limit} onChange={(e) => setLimit(e.target.value)} />
@@ -117,7 +143,7 @@ function CreateVault({ owner, onCreated }: { owner: Address; onCreated: () => vo
         later is instant; loosening them waits the delay.
       </p>
       {problem && <p className="text-sm text-bad">{problem}</p>}
-      <button className="btn btn-moon w-full" onClick={submit} disabled={tx.busy}>
+      <button className="btn btn-moon btn-lg w-full" onClick={submit} disabled={tx.busy}>
         {tx.busy ? "Creating…" : "Create vault"}
       </button>
       <TxStatus hash={tx.hash} busy={tx.busy} error={tx.error} />

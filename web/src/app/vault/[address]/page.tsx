@@ -22,10 +22,10 @@ export default function VaultPage() {
   const { address: me } = useAccount();
   const now = useNow();
 
-  if (!isDeployed) return <div className="py-10"><NotDeployed /></div>;
-  if (!vault) return <p className="py-10 text-bad">That isn’t a valid vault address.</p>;
-  if (v.loading) return <p className="py-10 text-muted">Loading vault…</p>;
-  if (!v.ready) return <p className="py-10 text-bad">Couldn’t read this vault. Is it a Mora vault on Base Sepolia?</p>;
+  if (!isDeployed) return <div className="wrap py-10"><NotDeployed /></div>;
+  if (!vault) return <p className="wrap py-16 text-bad">That isn’t a valid vault address.</p>;
+  if (v.loading) return <p className="wrap py-16 text-muted">Reading the vault from Base…</p>;
+  if (!v.ready) return <p className="wrap py-16 text-bad">Couldn’t read this vault. Is it a Mora vault on Base Sepolia?</p>;
 
   const isOwner = me?.toLowerCase() === v.owner.toLowerCase();
   const isGuardian = Boolean(me && v.guardians.some((g) => g.toLowerCase() === me.toLowerCase()));
@@ -35,22 +35,26 @@ export default function VaultPage() {
   const pendingC = v.changes.filter((c) => c.status === PENDING);
 
   return (
-    <div className="py-8 space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-bold">Vault <span className="font-mono">{short(vault)}</span></h1>
-        <span className="rounded-full border border-line px-3 py-1 text-xs">You: {role}</span>
-        {frozen && <span className="rounded-full bg-info/20 text-info px-3 py-1 text-xs">Frozen for {duration(v.frozenUntil - now)}</span>}
-        <Link href={`/v/${vault}`} className="ml-auto btn btn-ghost">Public page</Link>
+    <div className="wrap">
+      <div className="page-head flex flex-wrap items-end gap-4">
+        <div>
+          <span className="eyebrow">Vault · you are the {role.toLowerCase()}</span>
+          <h1 className="page-title num mt-5 tracking-[-0.04em]">{short(vault)}</h1>
+        </div>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {frozen && <span className="pill pill-sun">Frozen for {duration(v.frozenUntil - now)}</span>}
+          <Link href={`/v/${vault}`} className="btn btn-ghost">Public page</Link>
+        </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-[22px] border-[1.5px] border-black bg-black sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="In the vault" value={usd(v.balance)} />
         <Stat label="Most anyone can take right now" value={usd(v.maxExtractable)} tone={v.maxExtractable === 0n ? "good" : "moon"} />
-        <Stat label="Instant allowance" value={`${usd(v.rules.dailyLimit)}/day`} sub="refills gradually" />
-        <Stat label="Everything else waits" value={duration(v.rules.delay)} sub={`Curfew: ${curfewLabel(v.rules.curfewStart, v.rules.curfewEnd)}`} />
+        <Stat label="Instant allowance" value={`${usd(v.rules.dailyLimit)}/day`} sub="refills over 24 hours" />
+        <Stat label="Everything else waits" value={duration(v.rules.delay)} sub={v.rules.curfewStart === v.rules.curfewEnd ? "no curfew" : `curfew ${curfewLabel(v.rules.curfewStart, v.rules.curfewEnd)}`} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           {isOwner && <OwnerMoney vault={vault} refetch={v.refetch} />}
           <Queue vault={vault} items={v.withdrawals} now={now} canCancel={isOwner || isGuardian} frozen={frozen} refetch={v.refetch} />
@@ -69,18 +73,18 @@ export default function VaultPage() {
 
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "good" | "moon" }) {
   return (
-    <div className="card p-4">
-      <div className="text-xs text-muted">{label}</div>
-      <div className={`text-2xl font-bold mt-1 ${tone === "good" ? "text-good" : tone === "moon" ? "text-moon" : ""}`}>{value}</div>
-      {sub && <div className="text-xs text-muted mt-1">{sub}</div>}
+    <div className={tone === "good" ? "bg-sun p-5" : "bg-white p-5"}>
+      <div className="stat-label">{label}</div>
+      <div className="big-num mt-2 text-[38px]">{value}</div>
+      {sub && <div className="mt-2 text-xs text-muted">{sub}</div>}
     </div>
   );
 }
 
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="card p-5 space-y-3">
-      <h2 className="font-semibold">{title}</h2>
+    <section className="space-y-3 rounded-[22px] border border-line bg-white p-6">
+      <h2 className="panel-title">{title}</h2>
       {children}
     </section>
   );
@@ -148,9 +152,9 @@ function Queue({ vault, items, now, canCancel, frozen, refetch }: {
       {list.map((w) => {
         const ready = now >= w.unlockAt;
         return (
-          <div key={w.id} className="rounded-lg bg-surface-2 border border-line p-3 flex flex-wrap items-center gap-3 justify-between">
+          <div key={w.id} className="row flex flex-wrap items-center gap-3 justify-between">
             <div className="text-sm">
-              <div className="font-semibold">{usd(w.amount)} → <span className="font-mono">{short(w.to)}</span></div>
+              <div className="font-semibold">{usd(w.amount)} to <span className="num">{short(w.to)}</span></div>
               <div className="text-xs text-muted">
                 {w.status === PENDING ? (ready ? (frozen ? "Unlocked, but the vault is frozen" : "Unlocked, ready to send") : `Unlocks in ${duration(w.unlockAt - now)} (${localTime(w.unlockAt)})`) : STATUS[w.status]}
               </div>
@@ -183,14 +187,14 @@ function Emergency({ vault, recovery, refetch, pending }: { vault: Address; reco
   return (
     <Panel title={pending ? `Emergency · ${pending} request${pending > 1 ? "s" : ""} waiting` : "Emergency"}>
       <button
-        className="btn btn-moon w-full"
+        className="btn btn-sun w-full"
         disabled={tx.busy}
         onClick={() => {
           if (confirm(`Send the vault's entire USDC balance to the recovery address ${recovery}?`))
             tx.send({ address: vault, abi: vaultAbi, functionName: "rescue", args: [USDC!] });
         }}
       >
-        Rescue everything → {short(recovery)}
+        Rescue everything to {short(recovery)}
       </button>
       <div className="flex gap-2">
         <select className="input" value={hours} onChange={(e) => setHours(e.target.value)}>
@@ -234,7 +238,7 @@ function Changes({ vault, items, now, canCancel, frozen, refetch }: {
       {[...items].reverse().map((c) => {
         const ready = now >= c.readyAt;
         return (
-          <div key={c.id} className="rounded-lg bg-surface-2 border border-line p-3 space-y-2">
+          <div key={c.id} className="row space-y-2">
             <div className="text-sm break-all">{c.label}</div>
             <div className="text-xs text-muted">
               {c.status === PENDING ? (ready ? "Ready to apply" : `Applies in ${duration(c.readyAt - now)}`) : STATUS[c.status] === "Sent" ? "Applied" : STATUS[c.status]}
