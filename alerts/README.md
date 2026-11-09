@@ -45,7 +45,7 @@ failed push can drop subscriptions.
    (`gh` prompts for the value, so it never lands in your shell history.)
 3. Optionally set the web app URL so alert buttons open your vault page instead of Basescan:
    ```bash
-   gh variable set MORA_APP_URL --repo IamHarrie-Labs/mora --body https://your-app.vercel.app
+   gh variable set MORA_APP_URL --repo IamHarrie-Labs/mora --body https://moravault.vercel.app
    ```
 4. In the web app's environment (Vercel), set `NEXT_PUBLIC_ALERT_BOT` to the bot's username (without `@`; defaults to the public bot, `usemora_bot`)
    so vault pages show the subscribe link.

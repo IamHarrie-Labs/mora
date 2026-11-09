@@ -39,6 +39,8 @@ Built for **Vibestarter Vibeathon 02** (theme: *Night shift*).
 
 ## Live on Base Sepolia
 
+**App:** [moravault.vercel.app](https://moravault.vercel.app) · try the [2:07 AM demo](https://moravault.vercel.app/demo), no wallet needed. Guardian alerts: [@usemora_bot](https://t.me/usemora_bot).
+
 | Contract | Address |
 |---|---|
 | `MoraFactory` | [0x967cd50D421d497EF2D1753635bDC30F3Acd514B](https://sepolia.basescan.org/address/0x967cd50D421d497EF2D1753635bDC30F3Acd514B) |
