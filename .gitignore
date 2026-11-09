@@ -5,3 +5,4 @@ typechain-types/
 coverage/
 .env
 alerts/state.json
+alerts-state/

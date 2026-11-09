@@ -26,7 +26,7 @@ Built for **Vibestarter Vibeathon 02** (theme: *Night shift*).
 | **Rescue** | Sends the entire balance to a **recovery address you committed in advance**, and nowhere else. It also **voids everything still queued**, so a thief can't leave a recovery-address or owner change ticking behind it. |
 | **Loosening waits too** | Raising limits, removing a guardian, or changing the recovery address or owner is queued behind the same delay and can be cancelled. Tightening is instant. |
 | **"Sign on the door"** | `maxExtractableNow()` shows publicly the most anyone can take right now, usually **$0** at night. |
-| **Guardian alerts** | Guardians tap one link to get a **Telegram message** within about 5 minutes of any withdrawal request or rule change, with a button straight to Cancel and Rescue. Runs on GitHub Actions, no server needed. See [alerts/README.md](alerts/README.md). |
+| **Guardian alerts** | One public Telegram bot for everyone: anyone taps one link to watch a vault and gets a **Telegram message** within about 5 minutes of any withdrawal request or rule change, with a button straight to Cancel and Rescue. Runs on GitHub Actions with an encrypted subscriber list, no server needed. See [alerts/README.md](alerts/README.md). |
 
 ### What happens in an attack
 | Scenario | Outcome |

@@ -1,7 +1,9 @@
 name: Guardian alerts
 
 # Every 5 minutes: read new Telegram bot messages (subscriptions), scan Base Sepolia for events from
-# watched vaults, and message the guardians. State lives in the Actions cache, never in the repo.
+# watched vaults, and message everyone watching them. One bot serves any number of people and vaults.
+# - Subscribers: encrypted (key derived from the bot token) on the `alerts-state` branch. Durable, private.
+# - Last scanned block: a working file in the Actions cache.
 # Setup: add the TELEGRAM_BOT_TOKEN secret, and optionally the MORA_APP_URL variable (see alerts/README.md).
 
 on:
@@ -14,16 +16,19 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write # only to commit the encrypted subscriber list to the alerts-state branch
 
 jobs:
   alerts:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      ALERTS_STATE_KEY: ${{ secrets.ALERTS_STATE_KEY }}
       MORA_APP_URL: ${{ vars.MORA_APP_URL }}
       STATE_FILE: alerts/state.json
+      DURABLE_FILE: alerts-state/subscribers.enc.json
+      REMOTE_URL: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
     steps:
       - name: Skip until the bot token is configured
         if: env.TELEGRAM_BOT_TOKEN == ''
@@ -37,13 +42,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Restore alert state
+      - name: Restore working state
         if: env.TELEGRAM_BOT_TOKEN != ''
         uses: actions/cache/restore@v4
         with:
           path: alerts/state.json
           key: mora-alerts-${{ github.run_id }}
           restore-keys: mora-alerts-
+
+      - name: Load subscribers
+        if: env.TELEGRAM_BOT_TOKEN != ''
+        run: bash alerts/state-branch.sh load alerts-state
 
       - name: Install
         if: env.TELEGRAM_BOT_TOKEN != ''
@@ -53,7 +62,11 @@ jobs:
         if: env.TELEGRAM_BOT_TOKEN != ''
         run: node alerts/watch.js
 
-      - name: Save alert state
+      - name: Save subscribers
+        if: always() && env.TELEGRAM_BOT_TOKEN != ''
+        run: bash alerts/state-branch.sh save alerts-state
+
+      - name: Save working state
         if: always() && env.TELEGRAM_BOT_TOKEN != '' && hashFiles('alerts/state.json') != ''
         uses: actions/cache/save@v4
         with:
