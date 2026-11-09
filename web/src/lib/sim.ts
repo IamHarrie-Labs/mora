@@ -75,9 +75,11 @@ const log = (v: Vault, who: LogEntry["who"], text: string, tone?: LogEntry["tone
 
 /** Owner key (yours, or a thief's) asks to send `amount` to `to`. */
 export function withdraw(prev: Vault, to: string, amount: number, by: LogEntry["who"] = "attacker"): Vault {
+  const u = currentUsed(prev);
+  const instant = !isFrozen(prev) && !inCurfew(prev.rules, prev.now) && u + amount <= prev.rules.dailyLimit;
+  // Like the contract: an instant send the vault can't cover reverts (nothing happens).
+  if (instant && amount > prev.balance) return prev;
   const v = clone(prev);
-  const u = currentUsed(v);
-  const instant = !isFrozen(v) && !inCurfew(v.rules, v.now) && u + amount <= v.rules.dailyLimit && amount <= v.balance;
   if (instant) {
     v.used = u + amount;
     v.usedAt = v.now;
@@ -107,8 +109,9 @@ export function execute(prev: Vault, id: number): Vault {
   const w = v.withdrawals[id];
   if (!w || w.status !== "pending" || v.now < w.unlockAt || isFrozen(v)) return prev;
   if (w.amount > v.balance) {
-    log(v, "vault", `The $${w.amount.toLocaleString()} transfer to ${w.to} failed: the vault is empty.`, "good");
-    w.status = "cancelled";
+    // Like the contract: execute reverts and the request stays pending.
+    const msg = `The $${w.amount.toLocaleString()} transfer to ${w.to} can’t go through: the vault doesn’t hold enough.`;
+    if (!v.log.some((l) => l.text === msg)) log(v, "vault", msg, "good");
     return v;
   }
   w.status = "executed";

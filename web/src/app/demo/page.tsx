@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as S from "@/lib/sim";
+import { LIVE, PROOF_STEPS, basescan } from "@/lib/proof";
 
 type Scenario = "leak" | "force";
 
@@ -83,7 +84,8 @@ export default function DemoPage() {
         <p className="text-muted max-w-3xl">{sc.intro}</p>
         <p className="text-xs text-muted">
           Simulation that follows the same rules as the MoraVault contract (tested in{" "}
-          <a className="underline" href="https://github.com/iamharrie-labs/mora/blob/main/test/Mora.test.js">test/Mora.test.js</a>). No wallet needed.
+          <a className="underline" href="https://github.com/IamHarrie-Labs/mora/blob/main/test/Mora.test.js">test/Mora.test.js</a>). No wallet needed.{" "}
+          <a className="underline" href="#live-proof">See it on-chain ↓</a>
         </p>
       </section>
 
@@ -233,7 +235,38 @@ export default function DemoPage() {
           ))}
         </ol>
       </div>
+
+      <LiveProof />
     </div>
+  );
+}
+
+function LiveProof() {
+  return (
+    <section id="live-proof" className="card p-4 sm:p-5 space-y-3 scroll-mt-6">
+      <div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-moon">Not just a simulation</div>
+        <h2 className="text-lg font-semibold">This attack really ran on Base Sepolia</h2>
+        <p className="text-sm text-muted">The same contract, deployed and attacked for real. Every step is a transaction you can check.</p>
+      </div>
+      <ol className="space-y-2 text-sm">
+        {PROOF_STEPS.map((s, i) => (
+          <li key={s.tx} className="flex gap-3">
+            <span className="font-mono text-muted shrink-0">{i + 1}.</span>
+            <span className="min-w-0">
+              {s.text}{" "}
+              <a className="underline text-muted whitespace-nowrap" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">
+                view tx ↗
+              </a>
+            </span>
+          </li>
+        ))}
+      </ol>
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Link href={`/v/${LIVE.vault}`} className="btn btn-ghost">See that vault live</Link>
+        <a href={basescan("address", LIVE.factory)} target="_blank" rel="noreferrer" className="btn btn-ghost">Factory on Basescan ↗</a>
+      </div>
+    </section>
   );
 }
 
