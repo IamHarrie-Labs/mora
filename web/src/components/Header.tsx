@@ -15,7 +15,10 @@ const LINKS = [
 export function Header() {
   const path = usePathname();
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  // The phone menu remembers the page it was opened on, so it closes by itself after navigation.
+  const [openOn, setOpenOn] = useState<string | null>(null);
+  const open = openOn === path;
+  const setOpen = (v: boolean) => setOpenOn(v ? path : null);
 
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 8);
@@ -24,11 +27,10 @@ export function Header() {
     return () => window.removeEventListener("scroll", on);
   }, []);
 
-  // Close the phone menu on navigation and on Escape.
-  useEffect(() => setOpen(false), [path]);
+  // Close the phone menu on Escape.
   useEffect(() => {
     if (!open) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpenOn(null);
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [open]);
@@ -53,7 +55,7 @@ export function Header() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             aria-controls="phone-menu"
-            onClick={() => setOpen((o) => !o)}
+            onClick={() => setOpen(!open)}
           >
             <span data-open={open} />
           </button>
