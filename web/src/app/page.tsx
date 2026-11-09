@@ -50,14 +50,14 @@ export default function Home() {
           </div>
 
           <div className="relative mx-auto w-full max-w-[520px] lg:mb-2">
-            <div className="rounded-[28px] border-[1.5px] border-black bg-sun px-8 pt-14 pb-0 shadow-[10px_10px_0_#111] sm:px-12">
+            <div className="rounded-[28px] border-[1.5px] border-black bg-sun px-6 pt-12 pb-0 shadow-[8px_8px_0_#111] sm:px-12 sm:pt-14 sm:shadow-[10px_10px_0_#111]">
               <div className="flex items-center justify-between text-sm font-semibold">
                 <span className="num">02:07</span>
                 <span className="pill">curfew on</span>
               </div>
               <div className="mt-6 text-sm font-medium">Most anyone can take from this vault right now</div>
               <div className="big-num mt-2 text-[96px] sm:text-[128px]">$0</div>
-              <Mark size={440} rising className="mt-8 block w-full text-black" />
+              <Mark size={440} rising className="mt-4 block w-full text-black sm:mt-8" />
             </div>
             <div className="absolute -top-5 left-6 rotate-[-3deg] rounded-full border-[1.5px] border-black bg-paper px-4 py-2 text-sm font-semibold sm:-left-10">
               $10,000 waiting until 14:07
@@ -211,7 +211,7 @@ export default function Home() {
               <li key={s.tx} className="grid grid-cols-[44px_1fr_auto] items-baseline gap-4 border-b border-[#333] py-5">
                 <span className="num text-sm text-sun">0{i + 1}</span>
                 <span className="text-[15px] leading-snug">{s.text}</span>
-                <a className="num whitespace-nowrap text-xs text-[#a6a6a6] underline underline-offset-4 hover:text-sun" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">
+                <a className="tap num whitespace-nowrap text-xs text-[#a6a6a6] underline underline-offset-4 hover:text-sun" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">
                   tx ↗
                 </a>
               </li>
@@ -257,7 +257,7 @@ export default function Home() {
               <Link href="/demo" className="btn btn-ghost btn-lg">Try the demo first</Link>
             </div>
           </div>
-          <Mark size={300} className="shrink-0 text-black" />
+          <Mark size={300} className="w-[200px] shrink-0 text-black sm:w-[300px]" />
         </div>
       </section>
     </div>

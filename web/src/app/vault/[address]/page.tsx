@@ -47,7 +47,7 @@ export default function VaultPage() {
         </div>
       </div>
 
-      <div className="grid gap-px overflow-hidden rounded-[22px] border-[1.5px] border-black bg-black sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[22px] border-[1.5px] border-black bg-black lg:grid-cols-4">
         <Stat label="In the vault" value={usd(v.balance)} />
         <Stat label="Most anyone can take right now" value={usd(v.maxExtractable)} tone={v.maxExtractable === 0n ? "good" : "moon"} />
         <Stat label="Instant allowance" value={`${usd(v.rules.dailyLimit)}/day`} sub="refills over 24 hours" />
@@ -73,9 +73,9 @@ export default function VaultPage() {
 
 function Stat({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: "good" | "moon" }) {
   return (
-    <div className={tone === "good" ? "bg-sun p-5" : "bg-white p-5"}>
+    <div className={`p-4 sm:p-5 ${tone === "good" ? "bg-sun" : "bg-white"}`}>
       <div className="stat-label">{label}</div>
-      <div className="big-num mt-2 text-[38px]">{value}</div>
+      <div className="big-num mt-2 text-[26px] sm:text-[38px]">{value}</div>
       {sub && <div className="mt-2 text-xs text-muted">{sub}</div>}
     </div>
   );
@@ -214,7 +214,7 @@ function People({ owner, recovery, guardians }: { owner: Address; recovery: Addr
   const row = (k: string, a: Address) => (
     <div key={k + a} className="flex justify-between gap-3 text-sm">
       <span className="text-muted">{k}</span>
-      <a className="font-mono underline" href={`${explorer}/address/${a}`} target="_blank" rel="noreferrer">{short(a)}</a>
+      <a className="tap num underline" href={`${explorer}/address/${a}`} target="_blank" rel="noreferrer">{short(a)}</a>
     </div>
   );
   return (

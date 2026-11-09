@@ -87,25 +87,34 @@ export default function DemoPage() {
       </section>
 
       <div className="overflow-hidden rounded-[22px] border-[1.5px] border-black bg-black text-[#fbf7ee]">
-        <div className="grid gap-px bg-[#2a2a2a] sm:grid-cols-2 lg:grid-cols-[1fr_1.4fr_1fr_1fr_1fr]">
+        <div className="grid grid-cols-2 gap-px bg-[#2a2a2a] lg:grid-cols-[1fr_1.4fr_1fr_1fr_1fr]">
           <Stat label="Time" value={S.clock(v.now)} mono />
           <Stat label="Most anyone can take now" value={`$${extractable.toLocaleString()}`} big tone={extractable === 0 ? "sun" : "bad"} />
           <Stat label="In the vault" value={`$${v.balance.toLocaleString()}`} />
           <Stat label="Attacker got" value={`$${stolen.toLocaleString()}`} tone={stolen ? "bad" : undefined} />
-          <Stat label="Safe in your cold wallet" value={`$${rescued.toLocaleString()}`} tone={rescued ? "sun" : undefined} />
+          <Stat label="Safe in your cold wallet" value={`$${rescued.toLocaleString()}`} tone={rescued ? "sun" : undefined} wide />
         </div>
         <div className="border-t border-[#2a2a2a] px-5 py-3 text-xs text-[#b3b3b3]">
           Rules: ${v.rules.dailyLimit} instant per day · nothing instant 22:00 to 07:00 · everything else waits 12h · 1 guardian · recovery is your cold wallet
         </div>
       </div>
 
-      <div className="mt-4 flex items-start gap-3 rounded-[16px] border-[1.5px] border-black bg-sun px-5 py-4 text-[15px]" role="status">
-        <span className="font-bold">Next</span>
-        <span>{hint}</span>
+      <div className="sticky top-[64px] z-20 mt-4 rounded-[16px] border-[1.5px] border-black bg-sun px-4 py-3 text-[15px] sm:static sm:px-5 sm:py-4" role="status">
+        <div className="flex items-start gap-3">
+          <span className="font-bold">Next</span>
+          <span className="min-w-0 flex-1">{hint}</span>
+        </div>
+        <div className="num mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-black/20 pt-2 text-xs sm:hidden">
+          <span>{S.clock(v.now)}</span>
+          <span>can take ${extractable.toLocaleString()}</span>
+          <span>attacker ${stolen.toLocaleString()}</span>
+          {attackerActed && pendingCount > 0 && <a href="#guardian" className="tap ml-auto -my-3 px-2 font-sans font-semibold underline">Ada’s phone ↓</a>}
+          {!attackerActed && <a href="#attacker" className="tap ml-auto -my-3 px-2 font-sans font-semibold underline">{sc.attacker} ↓</a>}
+        </div>
       </div>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-3">
-        <Phone title={sc.attacker} sub={sc.attackerSub} tone="bad">
+        <Phone id="attacker" title={sc.attacker} sub={sc.attackerSub} tone="bad">
           <ActionButton onClick={() => setV(S.withdraw(v, THIEF, v.balance || 10_000))}>Send everything to {THIEF}</ActionButton>
           <ActionButton onClick={() => setV(S.withdraw(v, THIEF, 200))}>Send $200, the daily allowance</ActionButton>
           {scenario === "leak" ? (
@@ -144,7 +153,7 @@ export default function DemoPage() {
           </div>
         </div>
 
-        <Phone title="Ada, your sister" sub="your guardian" tone="good" buzzKey={buzz}>
+        <Phone id="guardian" title="Ada, your sister" sub="your guardian" tone="good" buzzKey={buzz}>
           {pendingCount === 0 && <p className="text-sm text-muted">No alerts. The phone is quiet.</p>}
           {v.withdrawals.filter((w) => w.status === "pending").map((w) => (
             <Alert key={`aw${w.id}`} text={`Mora: $${w.amount.toLocaleString()} to ${w.to} is waiting. It unlocks at ${S.clock(w.unlockAt)}.`}>
@@ -192,7 +201,7 @@ export default function DemoPage() {
         </ol>
         <p className="mt-6 text-xs text-muted">
           This simulation follows the same rules as the MoraVault contract. 30 parity tests check it against the real contract step by step.{" "}
-          <a className="underline" href="#live-proof">See the attack on-chain ↓</a>
+          <a className="tap underline" href="#live-proof">See the attack on-chain ↓</a>
         </p>
       </div>
 
@@ -201,12 +210,12 @@ export default function DemoPage() {
   );
 }
 
-function Stat({ label, value, big, mono, tone }: { label: string; value: string; big?: boolean; mono?: boolean; tone?: "sun" | "bad" }) {
+function Stat({ label, value, big, mono, tone, wide }: { label: string; value: string; big?: boolean; mono?: boolean; tone?: "sun" | "bad"; wide?: boolean }) {
   const color = tone === "sun" ? "text-sun" : tone === "bad" ? "text-[#ff8a73]" : "";
   return (
-    <div className="bg-black px-5 py-5">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a6a6a6]">{label}</div>
-      <div className={`mt-2 ${mono ? "num text-[34px] font-bold" : big ? "big-num text-[52px]" : "big-num text-[30px]"} ${color}`}>{value}</div>
+    <div className={`bg-black px-4 py-4 sm:px-5 sm:py-5 ${wide ? "col-span-2 lg:col-span-1" : ""}`}>
+      <div className="text-[12px] font-semibold uppercase tracking-[0.1em] text-[#a6a6a6]">{label}</div>
+      <div className={`mt-2 ${mono ? "num text-[26px] font-bold sm:text-[34px]" : big ? "big-num text-[40px] sm:text-[52px]" : "big-num text-[26px] sm:text-[30px]"} ${color}`}>{value}</div>
     </div>
   );
 }
@@ -221,7 +230,7 @@ function LiveProof() {
           <li key={s.tx} className="grid grid-cols-[40px_1fr_auto] items-baseline gap-3 border-b border-[#333] py-3 text-sm">
             <span className="num text-sun">0{i + 1}</span>
             <span>{s.text}</span>
-            <a className="num whitespace-nowrap text-xs text-[#a6a6a6] underline underline-offset-4 hover:text-sun" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">tx ↗</a>
+            <a className="tap num whitespace-nowrap text-xs text-[#a6a6a6] underline underline-offset-4 hover:text-sun" href={basescan("tx", s.tx)} target="_blank" rel="noreferrer">tx ↗</a>
           </li>
         ))}
       </ol>
@@ -233,9 +242,9 @@ function LiveProof() {
   );
 }
 
-function Phone({ title, sub, tone, children, buzzKey }: { title: string; sub: string; tone: "bad" | "good"; children: React.ReactNode; buzzKey?: number }) {
+function Phone({ id, title, sub, tone, children, buzzKey }: { id?: string; title: string; sub: string; tone: "bad" | "good"; children: React.ReactNode; buzzKey?: number }) {
   return (
-    <div key={buzzKey} className={`rounded-[22px] border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_#111] ${buzzKey ? "buzz" : ""}`}>
+    <div id={id} key={buzzKey} className={`scroll-mt-60 sm:scroll-mt-24 rounded-[22px] border-[1.5px] border-black bg-white p-5 shadow-[6px_6px_0_#111] ${buzzKey ? "buzz" : ""}`}>
       <div className="flex items-center gap-3">
         <span className={`grid h-10 w-10 place-items-center rounded-full text-sm font-bold ${tone === "bad" ? "bg-[#ffd9d0] text-bad" : "bg-[#d6f0e2] text-good"}`}>{title[0]}</span>
         <div>

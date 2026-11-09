@@ -126,8 +126,8 @@ h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.035e
 .site-header[data-scrolled="true"] { border-bottom-color: var(--line); }
 .site-header .inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; padding: 0 var(--gutter); }
 .site-nav { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 500; }
-.site-nav a.navlink { position: relative; padding: 6px 0; }
-.site-nav a.navlink::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--sun-deep); transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
+.site-nav a.navlink { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 6px 0; }
+.site-nav a.navlink::after { content: ""; position: absolute; left: 0; right: 0; bottom: 6px; height: 2px; background: var(--sun-deep); transform: scaleX(0); transform-origin: left; transition: transform .2s ease; }
 .site-nav a.navlink:hover::after, .site-nav a.navlink[aria-current="page"]::after { transform: scaleX(1); }
 @media (max-width: 720px) { .site-nav .navlink.hide-sm { display: none; } .site-nav { gap: 16px; } }
 
@@ -190,4 +190,39 @@ h1, h2, h3, .display { font-family: var(--font-display); letter-spacing: -0.035e
 
 @layer components {
   .wrap { padding: 0 var(--gutter) 96px; }
+}
+
+/* ---------- Phones ---------- */
+@layer components {
+  .menu-btn { display: none; position: relative; width: 44px; height: 44px; border-radius: 999px; border: 1.5px solid var(--ink); }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after { position: absolute; left: 50%; width: 18px; height: 2px; margin-left: -9px; background: var(--ink); border-radius: 2px; transition: transform .2s ease, opacity .2s ease; content: ""; }
+  .menu-btn span { top: 50%; margin-top: -1px; }
+  .menu-btn span::before { top: -6px; left: 0; margin-left: 0; }
+  .menu-btn span::after { top: 6px; left: 0; margin-left: 0; }
+  .menu-btn span[data-open="true"] { background: transparent; }
+  .menu-btn span[data-open="true"]::before { transform: translateY(6px) rotate(45deg); }
+  .menu-btn span[data-open="true"]::after { transform: translateY(-6px) rotate(-45deg); }
+  .phone-menu { display: none; border-top: 1px solid var(--line); background: var(--paper); padding: 8px var(--gutter) 20px; }
+  .phone-menu a { display: flex; align-items: baseline; gap: 14px; min-height: 56px; padding: 12px 0; border-bottom: 1px solid var(--line); font-family: var(--font-display); font-weight: 700; font-size: 26px; letter-spacing: -0.03em; }
+  .phone-menu a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--sun-deep); text-decoration-thickness: 3px; text-underline-offset: 6px; }
+  @media (max-width: 720px) {
+    .menu-btn { display: inline-block; }
+    .phone-menu { display: block; }
+    .site-nav { gap: 10px; }
+    .site-header .inner { height: 64px; }
+    .lockup { font-size: 24px; }
+    .lockup svg { width: 34px; height: auto; }
+  }
+
+  /* Comfortable tap targets for text links */
+  .link-arrow { display: inline-flex; align-items: center; min-height: 44px; }
+  .site-footer a { display: inline-flex; align-items: center; min-height: 40px; }
+  .tap { display: inline-flex; align-items: center; min-height: 40px; min-width: 40px; justify-content: center; }
+
+  @media (max-width: 720px) {
+    .rule-row { grid-template-columns: 1fr; gap: 10px; padding: 24px 0; }
+    .rule-row .n { font-size: 34px; }
+    .stat-label { font-size: 12px; }
+    .page-head { padding: 32px 0 22px; }
+  }
 }
