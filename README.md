@@ -45,6 +45,12 @@ Built for **Vibestarter Vibeathon 02** (theme: *Night shift*).
 | `MoraVault` (implementation) | [0x9602447cAaC26C34E9ee0B41a6316032268724ED](https://sepolia.basescan.org/address/0x9602447cAaC26C34E9ee0B41a6316032268724ED) |
 | `MockUSDC` (test token, anyone can mint) | [0x15675CcFBa9E7Ca64fFe64cDD4D8DBc75e219636](https://sepolia.basescan.org/address/0x15675CcFBa9E7Ca64fFe64cDD4D8DBc75e219636) |
 
+**Source verified (exact match) on Sourcify:** read it on Blockscout:
+[MoraFactory](https://base-sepolia.blockscout.com/address/0x967cd50D421d497EF2D1753635bDC30F3Acd514B?tab=contract) ·
+[MoraVault](https://base-sepolia.blockscout.com/address/0x9602447cAaC26C34E9ee0B41a6316032268724ED?tab=contract) ·
+[MockUSDC](https://base-sepolia.blockscout.com/address/0x15675CcFBa9E7Ca64fFe64cDD4D8DBc75e219636?tab=contract)
+(or on [Sourcify](https://repo.sourcify.dev/84532/0x967cd50D421d497EF2D1753635bDC30F3Acd514B)). Every vault is an EIP-1167 clone of that one `MoraVault`.
+
 **The stolen-key attack, run for real** against vault [0x4987…4580](https://sepolia.basescan.org/address/0x49879021E8C90B25514F3ba03F15a82eb7C44580):
 
 1. [Vault created](https://sepolia.basescan.org/tx/0x9c8ad6a2380b0b7295e10a25948369a1d46553d37e6cef917c4161e04eddd2b8): $200/day instant, 1h delay, 1 guardian, recovery wallet set.
