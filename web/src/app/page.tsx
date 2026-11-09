@@ -46,7 +46,6 @@ export default function Home() {
               <Link href="/demo" className="btn btn-moon btn-lg">Play the 2:07 AM demo</Link>
               <Link href="/app" className="link-arrow">Make a vault →</Link>
             </div>
-            <p className="mt-5 text-sm text-muted">The demo runs in your browser. No wallet needed.</p>
           </div>
 
           <div className="relative mx-auto w-full max-w-[520px] lg:mb-2">
