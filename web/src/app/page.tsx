@@ -159,7 +159,7 @@ export default function Home() {
             <h2 className="h-lg mt-6">A delay works when someone is watching.</h2>
             <p className="lede mt-8 max-w-xl">
               Anyone can follow a vault on Telegram. When a transfer or rule change joins the queue, every follower gets a message
-              within about five minutes, with a link straight to Cancel and Rescue.
+              within about 5 minutes, with a link straight to Cancel and Rescue.
             </p>
             <ol className="mt-10 space-y-4 text-[15px]">
               <li className="flex gap-4"><span className="num font-bold">1</span>Open a vault page and tap Get Telegram alerts.</li>

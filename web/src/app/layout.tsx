@@ -10,7 +10,7 @@ const body = Lexend({ subsets: ["latin"], weight: ["300", "400", "500", "600"], 
 const code = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "700"], variable: "--font-code" });
 
 export const metadata: Metadata = {
-  title: "Mora · a time-delay vault for your crypto",
+  title: "Mora · a time-delay safe for your crypto",
   description:
     "Large transfers wait in a queue, and people you trust can stop them while they wait. A self-custody vault on Base.",
 };

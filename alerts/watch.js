@@ -15,7 +15,7 @@
  *
  * Env:
  *   TELEGRAM_BOT_TOKEN   bot token from @BotFather (required unless DRY_RUN=1)
- *   MORA_APP_URL         public web app URL, e.g. https://mora.vercel.app (links go to Basescan if unset)
+ *   MORA_APP_URL         public web app URL, e.g. https://trymora.xyz (links go to Basescan if unset)
  *   STATE_FILE           working state (default alerts/state.json)
  *   DURABLE_FILE         encrypted subscriber list (the workflow points this at the alerts-state branch)
  *   ALERTS_STATE_KEY     encryption secret; defaults to the bot token. If you ever change the token,
