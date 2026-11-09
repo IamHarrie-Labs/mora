@@ -47,7 +47,7 @@ failed push can drop subscriptions.
    ```bash
    gh variable set MORA_APP_URL --repo IamHarrie-Labs/mora --body https://your-app.vercel.app
    ```
-4. In the web app's environment (Vercel), set `NEXT_PUBLIC_ALERT_BOT` to the bot's username (without `@`)
+4. In the web app's environment (Vercel), set `NEXT_PUBLIC_ALERT_BOT` to the bot's username (without `@`; defaults to the public bot, `usemora_bot`)
    so vault pages show the subscribe link.
 5. Run it once by hand: `gh workflow run guardian-alerts.yml --repo IamHarrie-Labs/mora`.
 
