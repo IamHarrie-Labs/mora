@@ -24,6 +24,8 @@ module.exports = {
     settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: "cancun" },
   },
   networks: {
+    // Lets the parity test run several transactions at the exact same timestamp as the simulator.
+    hardhat: { allowBlocksWithSameTimestamp: true },
     baseSepolia: {
       url: BASE_SEPOLIA_RPC || "https://sepolia.base.org",
       chainId: 84532,

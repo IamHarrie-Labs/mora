@@ -1,0 +1,61 @@
+name: Guardian alerts
+
+# Every 5 minutes: read new Telegram bot messages (subscriptions), scan Base Sepolia for events from
+# watched vaults, and message the guardians. State lives in the Actions cache, never in the repo.
+# Setup: add the TELEGRAM_BOT_TOKEN secret, and optionally the MORA_APP_URL variable (see alerts/README.md).
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: guardian-alerts
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      MORA_APP_URL: ${{ vars.MORA_APP_URL }}
+      STATE_FILE: alerts/state.json
+    steps:
+      - name: Skip until the bot token is configured
+        if: env.TELEGRAM_BOT_TOKEN == ''
+        run: echo "::notice::TELEGRAM_BOT_TOKEN secret is not set; guardian alerts are off."
+
+      - uses: actions/checkout@v4
+        if: env.TELEGRAM_BOT_TOKEN != ''
+
+      - uses: actions/setup-node@v4
+        if: env.TELEGRAM_BOT_TOKEN != ''
+        with:
+          node-version: 22
+
+      - name: Restore alert state
+        if: env.TELEGRAM_BOT_TOKEN != ''
+        uses: actions/cache/restore@v4
+        with:
+          path: alerts/state.json
+          key: mora-alerts-${{ github.run_id }}
+          restore-keys: mora-alerts-
+
+      - name: Install
+        if: env.TELEGRAM_BOT_TOKEN != ''
+        run: npm install --prefix alerts --no-package-lock --no-audit --no-fund
+
+      - name: Check vaults and send alerts
+        if: env.TELEGRAM_BOT_TOKEN != ''
+        run: node alerts/watch.js
+
+      - name: Save alert state
+        if: always() && env.TELEGRAM_BOT_TOKEN != '' && hashFiles('alerts/state.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: alerts/state.json
+          key: mora-alerts-${{ github.run_id }}-${{ github.run_attempt }}

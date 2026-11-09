@@ -1,0 +1,11 @@
+{
+  "name": "mora-guardian-alerts",
+  "private": true,
+  "description": "Telegram alerts for Mora vault guardians. Run by .github/workflows/guardian-alerts.yml.",
+  "scripts": {
+    "watch": "node watch.js"
+  },
+  "dependencies": {
+    "ethers": "6.17.0"
+  }
+}

@@ -10,7 +10,7 @@ const RULES = [
   ["Small amounts, instantly", "Spend up to your daily allowance (say $200) right away. It refills gradually over 24 hours."],
   ["Nothing instant at night", "During your curfew hours the instant allowance is $0."],
   ["Everything else waits", "Bigger transfers wait the full delay, say 12 hours, and never unlock during curfew."],
-  ["Guardians can stop it", "People you trust get an alert and can cancel, freeze, or rescue. They can never withdraw."],
+  ["Guardians can stop it", "People you trust get a Telegram alert and can cancel, freeze, or rescue. They can never withdraw."],
   ["Rescue only goes home", "Rescue sends everything to the recovery address you set up in advance, and nowhere else."],
   ["Loosening waits too", "Raising limits, removing a guardian or changing the recovery address waits the same delay. Tightening is instant."],
 ];
@@ -76,7 +76,7 @@ export default function Home() {
           Your vault is a standalone contract that holds the funds itself, so there’s no side door around the delay. Money leaves only
           three ways: within the instant allowance, after the delay, or by rescue to your own recovery address. It has no
           arbitrary calls, no approvals, no upgrades. 35 tests cover stolen keys, coercion, malicious guardians, and attempts to split
-          transfers or time them around the allowance.
+          transfers or time them around the allowance, and 30 more check that the demo follows the contract step for step.
         </p>
         <p className="text-sm text-muted">
           Honest limits: unaudited, testnet only. A delay creates a window for your guardians to act. It doesn’t guarantee safety.

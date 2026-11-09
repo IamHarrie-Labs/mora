@@ -8,6 +8,7 @@ import { isDeployed } from "@/lib/config";
 import { curfewLabel, duration, localTime, short, usd } from "@/lib/format";
 import { PENDING, useNow, useVault } from "@/lib/hooks";
 import { Moon } from "@/components/Header";
+import { AlertsCard } from "@/components/AlertsCard";
 import { NotDeployed } from "@/components/NotDeployed";
 
 /** The "sign on the door": what anyone could take from this vault right now, read live from Base. */
@@ -37,7 +38,7 @@ export default function PublicVault() {
           <div className={`text-6xl sm:text-7xl font-bold mt-2 ${v.maxExtractable === 0n ? "text-good" : "text-moon"}`}>{usd(v.maxExtractable)}</div>
         </div>
         <ul className="text-sm text-left space-y-2 max-w-sm mx-auto">
-          <li>• Anything more waits <b>{duration(v.rules.delay)}</b>, and nothing leaves instantly during curfew ({curfewLabel(v.rules.curfewStart, v.rules.curfewEnd)}).</li>
+          <li>• Anything more waits <b>{duration(v.rules.delay)}</b>{v.rules.curfewStart === v.rules.curfewEnd ? "." : <>, and nothing leaves instantly during curfew ({curfewLabel(v.rules.curfewStart, v.rules.curfewEnd)}).</>}</li>
           <li>• <b>{v.guardians.length}</b> guardian{v.guardians.length === 1 ? "" : "s"} can cancel any transfer or send everything to a recovery address set in advance.</li>
           <li>• Changing these rules also waits {duration(v.rules.delay)}.</li>
           {frozen && <li className="text-info">• Frozen right now: nothing can leave for {duration(v.frozenUntil - now)}.</li>}
@@ -54,6 +55,7 @@ export default function PublicVault() {
           >
             {copied ? "Link copied" : "Copy link"}
           </button>
+          <AlertsCard vault={vault} compact />
           <Link href="/demo" className="btn btn-moon">How Mora works</Link>
         </div>
       </div>

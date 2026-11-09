@@ -9,6 +9,7 @@ import { tokenAbi, vaultAbi } from "@/lib/abi";
 import { USDC, canMintTestUsdc, explorer, isDeployed } from "@/lib/config";
 import { curfewLabel, duration, hhmmToMin, localTime, localToUtcMin, minToHHMM, short, toUnits, usd, utcToLocalMin } from "@/lib/format";
 import { PENDING, useNow, useTx, useVault, type QueuedWithdrawal } from "@/lib/hooks";
+import { AlertsCard } from "@/components/AlertsCard";
 import { NotDeployed } from "@/components/NotDeployed";
 import { TxStatus } from "@/components/TxStatus";
 
@@ -56,6 +57,7 @@ export default function VaultPage() {
         </div>
         <div className="space-y-6">
           {(isOwner || isGuardian) && <Emergency vault={vault} recovery={v.recovery} refetch={v.refetch} pending={pendingW.length + pendingC.length} />}
+          <AlertsCard vault={vault} />
           <People owner={v.owner} recovery={v.recovery} guardians={v.guardians} />
           <Changes vault={vault} items={v.changes} now={now} canCancel={isOwner || isGuardian} frozen={frozen} refetch={v.refetch} />
           {isOwner && <Settings vault={vault} rules={v.rules} guardians={v.guardians} refetch={v.refetch} />}
