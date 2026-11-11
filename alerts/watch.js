@@ -25,6 +25,7 @@
  *   SUBSCRIBE            dry-run only: "vault:chatId,..." subscriptions to seed
  *   DRY_MESSAGES         dry-run only: "chatId:text|chatId:text" fake incoming bot messages
  *   START_BLOCK          scan from this block instead of the saved position
+ *   POLL_TIMEOUT         seconds to wait for a new bot message before scanning (default 0)
  */
 const fs = require("fs");
 const path = require("path");
@@ -353,7 +354,9 @@ async function main() {
   // 1. Commands: drain every waiting message, 100 per page, saving after each page.
   let handled = 0;
   for (let page = 0; page < MAX_UPDATE_PAGES; page++) {
-    const updates = await tg("getUpdates", { offset: s.offset, limit: 100, timeout: 0, allowed_updates: ["message"] });
+    // In a long shift (alerts/shift.sh), the first read waits up to POLL_TIMEOUT seconds for a message, so replies are near instant.
+    const wait = page === 0 && !DRY ? Number(process.env.POLL_TIMEOUT || 0) : 0;
+    const updates = await tg("getUpdates", { offset: s.offset, limit: 100, timeout: wait, allowed_updates: ["message"] });
     const batch = (updates.ok && updates.result) || [];
     for (const u of batch) {
       s.offset = u.update_id + 1;

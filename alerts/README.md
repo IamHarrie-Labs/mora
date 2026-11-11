@@ -15,7 +15,7 @@ button that opens the vault page where they can cancel or rescue.
 
 ## How it runs
 
-`.github/workflows/guardian-alerts.yml` runs `watch.js` every 5 minutes on GitHub Actions. Each run:
+`.github/workflows/guardian-alerts.yml` runs one long shift at a time on GitHub Actions, about 5 hours 40 minutes each, and every shift starts the next one before it ends. A schedule every 30 minutes restarts the chain if a shift ever fails to. Inside a shift, `alerts/shift.sh` runs `watch.js` in a loop. Each pass waits up to 25 seconds for a bot message, so replies arrive within seconds, and then:
 
 1. Loads the subscriber list from the repo's `alerts-state` branch.
 2. Reads **every** waiting bot message, 100 at a time, until none are left, and applies `/watch`, `/stop`, `/list`.
@@ -57,11 +57,11 @@ the run reports an error and leaves the stored list untouched rather than overwr
 
 ## Limits
 
-- GitHub runs scheduled workflows on a best-effort basis: usually every 5 minutes, sometimes 10–15 minutes
-  late at busy times. That's small next to a vault's delay (at least 1 hour, usually 12), but choose a
-  delay with room to react.
-- The reply to `/watch` arrives on the next run, not instantly. Instant replies need a webhook and a
-  database; that's on the roadmap.
+- Alerts usually arrive within a minute. Between two shifts there is a gap of about a minute while the
+  next one starts.
+- GitHub runs short scheduled jobs late on quiet repos, often by hours. That is why the bot runs long
+  shifts that start each other. If the chain ever breaks, the 30-minute schedule restarts it, and that
+  can also be late, so keep the vault delay well above it.
 - If runs stop for more than about 4 hours, older events are not replayed.
 - GitHub pauses scheduled workflows in repos with no commits for 60 days. Re-enable it from the Actions tab.
 

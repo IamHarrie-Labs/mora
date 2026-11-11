@@ -1,31 +1,39 @@
 name: Guardian alerts
 
-# Every 5 minutes: read new Telegram bot messages (subscriptions), scan Base Sepolia for events from
-# watched vaults, and message everyone watching them. One bot serves any number of people and vaults.
+# One long shift at a time (about 5h40m): answer Telegram bot messages within seconds, scan Base Sepolia
+# for events from watched vaults about every 30 seconds, and message everyone watching them. Before a shift
+# ends it starts the next one. The schedule below only restarts the chain if a shift ever fails to.
+# GitHub runs short scheduled jobs late (often hours late on a quiet repo), which is why this runs long.
 # - Subscribers: encrypted (key derived from the bot token) on the `alerts-state` branch. Durable, private.
 # - Last scanned block: a working file in the Actions cache.
 # Setup: add the TELEGRAM_BOT_TOKEN secret, and optionally the MORA_APP_URL variable (see alerts/README.md).
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
+    inputs:
+      shift_seconds:
+        description: "How long this shift runs, in seconds"
+        default: "20400"
 
 concurrency:
   group: guardian-alerts
   cancel-in-progress: false
 
 permissions:
-  contents: write # only to commit the encrypted subscriber list to the alerts-state branch
+  contents: write # to commit the encrypted subscriber list to the alerts-state branch
+  actions: write # to start the next shift
 
 jobs:
   alerts:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 355
     env:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       ALERTS_STATE_KEY: ${{ secrets.ALERTS_STATE_KEY }}
       MORA_APP_URL: ${{ vars.MORA_APP_URL }}
+      SHIFT_SECONDS: ${{ inputs.shift_seconds || '20400' }}
       STATE_FILE: alerts/state.json
       DURABLE_FILE: alerts-state/subscribers.enc.json
       REMOTE_URL: https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
@@ -60,7 +68,7 @@ jobs:
 
       - name: Check vaults and send alerts
         if: env.TELEGRAM_BOT_TOKEN != ''
-        run: node alerts/watch.js
+        run: bash alerts/shift.sh
 
       - name: Save subscribers
         if: always() && env.TELEGRAM_BOT_TOKEN != ''
@@ -72,3 +80,9 @@ jobs:
         with:
           path: alerts/state.json
           key: mora-alerts-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Start the next shift
+        if: always() && env.TELEGRAM_BOT_TOKEN != '' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run guardian-alerts.yml --repo "${{ github.repository }}" --ref "${{ github.ref_name }}"
