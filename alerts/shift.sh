@@ -13,6 +13,6 @@ while [ "$SECONDS" -lt "$end" ]; do
   bash alerts/state-branch.sh save alerts-state > /dev/null || echo "::warning::could not save subscribers this pass"
   passes=$((passes + 1))
   if [ $((passes % 100)) -eq 0 ]; then echo "$passes passes, $((SECONDS / 60)) min"; fi
-  sleep 3
+  sleep 1
 done
 echo "shift over after $passes passes"
